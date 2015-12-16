@@ -681,6 +681,7 @@ class SatelliteInstrumentScene(SatelliteScene):
                         radius = 5 * chn.resolution
                     else:
                         radius = 10000
+                LOG.debug("computing new cov for channel %s (area %s)" % (chn.name, area_id))        
                 cov[area_id] = mpop.projector.Projector(chn.area,
                                                         dest_area,
                                                         mode=mode,
@@ -693,6 +694,7 @@ class SatelliteInstrumentScene(SatelliteScene):
                         LOG.exception("Could not save projection.")
 
             try:
+                LOG.info("projecting channel %s (%s)" % (chn.name, chn.shape))
                 res.channels.append(chn.project(cov[area_id]))
             except NotLoadedError:
                 LOG.warning("Channel " + str(chn.name) + " not loaded, "
