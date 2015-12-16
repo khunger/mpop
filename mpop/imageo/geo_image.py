@@ -107,6 +107,7 @@ class GeoImage(Image):
             except ImportError:
                 raise  UnknownImageFormat(
                     "Unknown image format '%s'" % fformat)
+            kwargs['compression'] = compression
             saver.save(self, filename, **kwargs)
 
     def _gdal_write_channels(self, dst_ds, channels, opacity, fill_value):
