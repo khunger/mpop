@@ -113,7 +113,7 @@ def boundaries_to_extent(proj4_str, maximum_extent, default_extent,
 
     # Replace "infinity" values with default extent
     for i in range(4):
-        if extent[i] is np.nan:
+        if np.isnan(extent[i]):
             extent[i] = default_extent[i]
 
     # update maximum extent
