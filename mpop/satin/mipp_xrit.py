@@ -194,6 +194,7 @@ def load_generic(satscene, options, calibrate=True, area_extent=None,
         satscene[chn] = data
 
         satscene[chn].info['units'] = metadata.calibration_unit
+        satscene[chn].info['sublon'] = metadata.sublon
         satscene[chn].info['satname'] = satscene.satname
         satscene[chn].info['satnumber'] = satscene.number
         satscene[chn].info['instrument_name'] = satscene.instrument_name
