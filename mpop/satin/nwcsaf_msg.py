@@ -2314,6 +2314,14 @@ def get_area_from_file(filename):
     return area_def
 
 
+def _get_sat_id(scene):
+    satid = scene.satname.capitalize()
+    if scene.number != '':
+        ct_chan.satid = (ct_chan.satid + 
+                         str(int(scene.number)).rjust(2))
+    return satid
+    
+    
 def load(scene, **kwargs):
     """Load data into the *channels*. *Channels* is a list or a tuple
     containing channels we will load data into. If None, all channels are
@@ -2341,8 +2349,7 @@ def load(scene, **kwargs):
                        "product": "CTTH_"})
         ct_chan = MsgCTTH()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
 
@@ -2355,8 +2362,7 @@ def load(scene, **kwargs):
         ct_chan.read(products[-1])
         LOG.debug("Uncorrected file: %s", products[-1])
         ct_chan.name = "CloudType"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
     if "CloudType_plax" in scene.channels_to_load:
@@ -2368,8 +2374,7 @@ def load(scene, **kwargs):
         LOG.debug("Parallax corrected file: %s", products[0])
         ct_chan_plax.read(products[0])
         ct_chan_plax.name = "CloudType_plax"
-        ct_chan_plax.satid = (scene.satname.capitalize() +
-                              str(int(scene.number)).rjust(2))
+        ct_chan_plax.satid = _get_sat_id(scene)
         ct_chan_plax.resolution = ct_chan_plax.area.pixel_size_x
         scene.channels.append(ct_chan_plax)
     if "CRR" in scene.channels_to_load:
@@ -2379,8 +2384,7 @@ def load(scene, **kwargs):
         ct_chan = MsgCRR()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
         ct_chan.name = "CRR"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
     if "PC" in scene.channels_to_load:
@@ -2390,8 +2394,7 @@ def load(scene, **kwargs):
         ct_chan = MsgPC()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
         ct_chan.name = "PC"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
     if "SPhR" in scene.channels_to_load:
@@ -2401,8 +2404,7 @@ def load(scene, **kwargs):
         ct_chan = MsgSPhR()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
         ct_chan.name = "SPhR"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
     if "PCPh" in scene.channels_to_load:
@@ -2412,8 +2414,7 @@ def load(scene, **kwargs):
         ct_chan = MsgPCPh()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
         ct_chan.name = "PCPh"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
     if "CRPh" in scene.channels_to_load:
@@ -2423,8 +2424,7 @@ def load(scene, **kwargs):
         ct_chan = MsgCRPh()
         ct_chan.read(get_best_product(filename, area_extent),calibrate)
         ct_chan.name = "CRPh"
-        ct_chan.satid = (scene.satname.capitalize() +
-                         str(int(scene.number)).rjust(2))
+        ct_chan.satid = _get_sat_id(scene)
         ct_chan.resolution = ct_chan.area.pixel_size_x
         scene.channels.append(ct_chan)
 
