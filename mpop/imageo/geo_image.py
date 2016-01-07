@@ -108,6 +108,12 @@ class GeoImage(Image):
                 raise  UnknownImageFormat(
                     "Unknown image format '%s'" % fformat)
             kwargs['compression'] = compression
+            
+            # forward nbits argmuent to allow usage of same configuration
+            # for GeoTIFF and NinJoTIFF
+            if tags and "NBITS" in tags:
+                kwargs['nbits'] = tags.get("NBITS")
+                
             saver.save(self, filename, **kwargs)
 
     def _gdal_write_channels(self, dst_ds, channels, opacity, fill_value):
