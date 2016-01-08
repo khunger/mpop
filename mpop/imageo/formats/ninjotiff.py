@@ -238,9 +238,9 @@ def _get_projection_name(area_def):
 def _get_pixel_size(projection_name, area_def):
     if projection_name == 'PLAT':
         upper_left = area_def.get_lonlat(0, 0)
-        lower_right = area_def.get_lonlat(area_def.shape[0], area_def.shape[1])
-        pixel_size = abs(lower_right[0] - upper_left[0]) / area_def.shape[1],\
-            abs(upper_left[1] - lower_right[1]) / area_def.shape[0]
+        lower_right = area_def.get_lonlat(area_def.shape[0]-1, area_def.shape[1]-1)
+        pixel_size = abs(lower_right[0] - upper_left[0]) / (area_def.shape[1]-1),\
+            abs(upper_left[1] - lower_right[1]) / (area_def.shape[0]-1)
     elif projection_name in ('NPOL', 'SPOL'):
         pixel_size = (np.rad2deg(area_def.pixel_size_x / float(area_def.proj_dict['a'])),
                       np.rad2deg(area_def.pixel_size_y / float(area_def.proj_dict['b'])))
@@ -263,7 +263,7 @@ def _get_satellite_altitude(filename):
     return None
 
 
-def _finalize(geo_image, dtype=np.uint8, value_range=None):
+def _finalize(geo_image, dtype=np.uint8, value_range=None, value_range_measurement_unit = None):
     """Finalize a mpop GeoImage for Ninjo. Specialy take care of phycical scale
     and offset.
 
@@ -300,29 +300,45 @@ def _finalize(geo_image, dtype=np.uint8, value_range=None):
             scale = 1
             offset = 0
         else:
-            if value_range:
-                data.clip(value_range[0], value_range[1], data)
-                chn_min = value_range[0]
-                chn_max = value_range[1]
-                log.debug("Scaling, using value range %.2f - %.2f" %
-                          (value_range[0], value_range[1]))
+            if value_range_measurement_unit:
+                # no additional scaling of the input data - assume that data is within [0.0, 1.0]
+                # and interpretate 0.0 as value_range_measurement_unit[0] 
+                # and 1.0 as value_range_measurement_unit[1] 
+                channels, fill_value = geo_image._finalize(dtype)
+                fill_value = fill_value or (0,)
+                data = channels[0]
+                
+                scale = ((value_range_measurement_unit[1] - value_range_measurement_unit[0]) /
+                        (2**np.iinfo(dtype).bits - 1.0))  # @UndefinedVariable
+                # Handle the case where all data has the same value.
+                scale = scale or 1
+                offset = value_range_measurement_unit[0]
+                mask = data.mask
             else:
-                chn_max = data.max()
-                chn_min = data.min()
-                log.debug("Doing auto scaling")
+                if value_range:
+                    data.clip(value_range[0], value_range[1], data)
+                    chn_min = value_range[0]
+                    chn_max = value_range[1]
+                    log.debug("Scaling, using value range %.2f - %.2f" %
+                              (value_range[0], value_range[1]))
+                else:
+                    chn_max = data.max()
+                    chn_min = data.min()
+                    log.debug("Doing auto scaling")
+    
+                # Make room for transparent pixel.
+                scale = ((chn_max - chn_min) /
+                         (np.iinfo(dtype).max - 1.0))
+    
+                # Handle the case where all data has the same value.
+                scale = scale or 1
+                offset = chn_min
+    
+                # Scale data to dtype, and adjust for transparent pixel forced to be minimum.
+                mask = data.mask
+                data = 1 + ((data.data - offset) / scale).astype(dtype)
+                offset -= scale
 
-            # Make room for transparent pixel.
-            scale = ((chn_max - chn_min) /
-                     (np.iinfo(dtype).max - 1.0))
-
-            # Handle the case where all data has the same value.
-            scale = scale or 1
-            offset = chn_min
-
-            # Scale data to dtype, and adjust for transparent pixel forced to be minimum.
-            mask = data.mask
-            data = 1 + ((data.data - offset) / scale).astype(dtype)
-            offset -= scale
             data[mask] = fill_value
 
             if log.getEffectiveLevel() == logging.DEBUG:
@@ -395,7 +411,14 @@ def save(geo_image, filename, ninjo_product_name=None, **kwargs):
     except KeyError:
         value_range = None
 
-    data, scale, offset, fill_value = _finalize(geo_image, dtype=dtype, value_range=value_range)
+    try:
+        # TODO: don't force min and max to integers.
+        value_range_measurement_unit = int(kwargs["ch_min_measurement_unit"]), int(kwargs["ch_max_measurement_unit"])
+    except KeyError:
+        value_range_measurement_unit = None
+
+    data, scale, offset, fill_value = _finalize(geo_image, dtype=dtype, value_range=value_range,
+                                                value_range_measurement_unit=value_range_measurement_unit)
     area_def = geo_image.area
     time_slot = geo_image.time_slot
 
@@ -431,7 +454,7 @@ def write(image_data, output_fn, area_def, product_name=None, **kwargs):
             See _write
     """
     upper_left = area_def.get_lonlat(0, 0)
-    lower_right = area_def.get_lonlat(area_def.shape[0], area_def.shape[1])
+    lower_right = area_def.get_lonlat(area_def.shape[0]-1, area_def.shape[1]-1)
 
     if len(image_data.shape) == 3:
         if image_data.shape[2] == 4:
