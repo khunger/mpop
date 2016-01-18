@@ -412,8 +412,7 @@ def save(geo_image, filename, ninjo_product_name=None, **kwargs):
         value_range = None
 
     try:
-        # TODO: don't force min and max to integers.
-        value_range_measurement_unit = int(kwargs["ch_min_measurement_unit"]), int(kwargs["ch_max_measurement_unit"])
+        value_range_measurement_unit = float(kwargs["ch_min_measurement_unit"]), float(kwargs["ch_max_measurement_unit"])
     except KeyError:
         value_range_measurement_unit = None
 
