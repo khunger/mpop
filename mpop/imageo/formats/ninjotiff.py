@@ -309,11 +309,20 @@ def _finalize(geo_image, dtype=np.uint8, value_range=None, value_range_measureme
                 data = channels[0]
                 
                 scale = ((value_range_measurement_unit[1] - value_range_measurement_unit[0]) /
-                        (2**np.iinfo(dtype).bits - 1.0))  # @UndefinedVariable
+                        (np.iinfo(dtype).max - 1.0))
                 # Handle the case where all data has the same value.
                 scale = scale or 1
                 offset = value_range_measurement_unit[0]
+                
                 mask = data.mask
+                
+                # Make room for transparent pixel.
+                scale_fill_value = ((np.iinfo(dtype).max - 1.0) / np.iinfo(dtype).max)
+                data = 1 + (data.data * scale_fill_value).astype(dtype)
+                
+                offset -= scale
+                scale /= scale_fill_value
+                
             else:
                 if value_range:
                     data.clip(value_range[0], value_range[1], data)
