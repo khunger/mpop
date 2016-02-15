@@ -68,7 +68,7 @@ class GeoImage(Image):
         self.time_slot = time_slot
         self.tags = {}
         self.gdal_options = {}
-
+        self.repl_fill_val_in_data = None
         Image.__init__(self, channels, mode, crange,
                        fill_value, palette)
 
@@ -185,8 +185,13 @@ class GeoImage(Image):
                 gformat = gdal.GDT_Byte
             opacity = np.iinfo(dtype).max
             channels, fill_value = self._finalize(dtype)
-
+            
+            if fill_value is not None and self.repl_fill_val_in_data is not None:
+                for i, chan in enumerate(channels):
+                    np.place(chan, chan==fill_value, self.repl_fill_val_in_data)
+                
         logger.debug("Saving to GeoTiff.")
+
 
         if tags is not None:
             self.tags.update(tags)
