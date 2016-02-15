@@ -188,7 +188,7 @@ class GeoImage(Image):
             
             if fill_value is not None and self.repl_fill_val_in_data is not None:
                 for i, chan in enumerate(channels):
-                    np.place(chan, chan==fill_value, self.repl_fill_val_in_data)
+                    np.place(chan, chan==fill_value[i], self.repl_fill_val_in_data)
                 
         logger.debug("Saving to GeoTiff.")
 
